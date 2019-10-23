@@ -1,0 +1,76 @@
+---
+# yamllint disable rule:truthy
+# yamllint disable rule:line-length
+#
+- hosts: all
+  tasks:
+          - name: "Include variables"
+            include_vars:
+                    file: secrets.yml
+                    name: secrets
+
+          - name: "Update cache"
+            apt:
+                    update_cache: yes
+
+          - name: "Upgrade system"
+            apt:
+                    name: "*"
+                    state: latest
+
+          - name: "Install useful packages"
+            apt:
+                    name:
+                            - vim
+                            - screen
+                            - tcpdump
+                            - strace
+                            - aptitude
+                            - apt-file
+                            - firewalld
+                            - unattended-upgrades
+                    state: latest
+
+          - name: "Copy kitty terminfo"
+            copy:
+                    src: /usr/share/terminfo/x/xterm-kitty
+                    dest: /usr/share/terminfo/x/xterm-kitty
+
+          - name: "Create group pi"
+            group:
+                    name: pi
+                    state: present
+
+          - name: "Create user pi"
+            user:
+                    name: pi
+                    comment: Pi
+                    append: yes
+                    group: pi
+                    groups: adm,dialout,cdrom,sudo,audio,video,plugdev,games,users,input,netdev,gpio,i2c,spi
+                    generate_ssh_key: yes
+                    ssh_key_type: ed25519
+                    ssh_key_file: .ssh/id_ed25519
+                    password: "{{ secrets.pi_user_password }}"
+
+          - name: Add public keys to root
+            authorized_key:
+                    user: root
+                    key: "https://raw.githubusercontent.com/vatral/dotfiles/master/.ssh/public_keys.pub"
+
+          - name: Add public keys to pi
+            authorized_key:
+                    user: pi
+                    key: "https://raw.githubusercontent.com/vatral/dotfiles/master/.ssh/public_keys.pub"
+
+          - name: Update apt-file
+            shell: apt-file update
+
+          - import_role:
+                    name: willshersystems.sshd
+            vars:
+                    sshd:
+                            PasswordAuthentication: no
+                            ChallengeResponseAuthentication: no
+                            PermitEmptyPasswords: no
+                            PermitRootLogin: prohibit-password

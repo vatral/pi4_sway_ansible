@@ -1,0 +1,27 @@
+---
+- hosts: all
+  tasks:
+          - name: "Create dirs"
+            file:
+                    path: /home/pi/.config/sway
+                    state: directory
+
+          - name: "Create dirs"
+            file:
+                    path: /home/pi/.config/i3status
+                    state: directory
+
+
+          - name: "Copy Sway configuration"
+            copy:
+                    src: files/sway/config
+                    dest: /home/pi/.config/sway/config
+
+          - name: "Copy i3status configuration"
+            copy:
+                    src: files/i3status/config
+                    dest: /home/pi/.config/i3status/config
+
+
+
+

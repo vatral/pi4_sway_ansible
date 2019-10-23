@@ -1,0 +1,70 @@
+---
+- hosts: all
+  tasks:
+          - name: "Install packages"
+            apt:
+                    update_cache: yes
+                    name:
+                            # General
+                            - build-essential
+                            - autoconf
+                            - automake
+                            - libtool
+                            - git
+                            - cmake
+                            - meson
+                            - libgtk-3-dev
+                            # VTE
+                            - gtk-doc-tools
+                            - intltool
+                            - gobject-introspection
+                            - libgirepository1.0-dev
+                            - valac
+                            - gperf
+                            - libxml2-utils
+
+
+          - name: "Create build directory"
+            file:
+                    path: /tmp/build
+                    state: directory
+
+          - name: "Checkout VTE-ng"
+            git:
+                    repo: https://github.com/thestinger/vte-ng.git
+                    dest: /tmp/build/vte
+
+
+          - name: "Autogen VTE-ng"
+            shell: ./autogen.sh 2>&1 | tee /tmp/build/vte-autogen.txt
+            args:
+                    chdir: /tmp/build/vte
+
+          - name: "Make VTE-ng"
+            shell: make -j4 2>&1 | tee /tmp/build/vte-make.txt
+            args:
+                    chdir: /tmp/build/vte
+
+          - name: "Install VTE-ng"
+            shell: ./make install 2>&1 | tee /tmp/build/vte-install.txt
+            args:
+                    chdir: /tmp/build/vte
+
+
+          - name: "Checkout termite"
+            git:
+                    repo: https://github.com/thestinger/termite.git
+                    dest: /tmp/build/termite
+
+          - name: "Run make"
+            shell: make -j4 2>&1 | tee /tmp/build/termite-make.txt
+            args:
+                    chdir: /tmp/build/termite
+
+          - name: "Install termite"
+            shell: make install  2>&1 | tee /tmp/build/termite-install.txt
+            args:
+                    chdir: /tmp/build/termite
+
+
+

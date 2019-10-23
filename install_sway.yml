@@ -1,0 +1,136 @@
+---
+- hosts: all
+  tasks:
+          - name: "Install packages"
+            apt:
+                    update_cache: yes
+                    name:
+                            # General
+                            - build-essential
+                            - autoconf
+                            - automake
+                            - libtool
+                            - git
+                            - cmake
+                            - meson
+
+                            # wlroots
+                            - libwayland-dev
+                            - wayland-protocols
+                            - libwayland-egl-backend-dev
+                            - libegl1-mesa-dev
+                            - libdrm-dev
+                            - libgbm-dev
+                            - libinput-dev
+                            - libxkbcommon-dev
+                            - libudev-dev
+                            - libpixman-1-dev
+                            - libsystemd-dev
+                            - libcap-dev
+                            - libxcb1-dev
+                            - libxcb-composite0-dev
+                            - libxcb-xfixes0-dev
+                            - libxcb-xinput-dev
+                            - libxcb-image0-dev
+                            - libxcb-render0-dev
+                            - libx11-xcb-dev
+                            - libxcb-icccm4-dev
+                            - libwinpr2-dev
+                            - libgles2-mesa-dev
+                            - freerdp2-dev
+                            - libavutil-dev
+                            - libavcodec-dev
+                            - libavformat-dev
+
+                            # Sway
+                            - libpcre3-dev
+                            - libpango1.0-dev
+                            - libcairo2-dev
+                            - libgdk-pixbuf2.0-dev
+                            - scdoc
+
+                            # Extra
+                            - xwayland
+                            - i3status
+                            - fonts-symbola
+                            - fonts-firacode
+                    state: latest
+
+
+          - name: "Create build directory"
+            file:
+                    path: /tmp/build
+                    state: directory
+
+
+          - name: "Checkout wlroots"
+            git:
+                    repo: https://github.com/swaywm/wlroots
+                    dest: /tmp/build/wlroots 
+
+          - name: "Run meson"
+            shell: meson build  2>&1 | tee /tmp/build/wlroots-meson.txt
+            args:
+                    chdir: /tmp/build/wlroots
+                    creates: /tmp/build/wlroots/build
+
+          - name: "Compile wlroots"
+            shell: ninja -C build  2>&1 | tee /tmp/build/wlroots-build.txt
+            args:
+                    chdir: /tmp/build/wlroots
+                    creates: /tmp/build/wlroots/libwlroots.so
+
+          - name: "Install wlroots"
+            shell: ninja -C build install 2>&1 | tee /tmp/build/wlroots-build.txt
+            args:
+                    chdir: /tmp/build/wlroots
+                    creates: /usr/local/lib/arm-linux-gnueabihf/libwlroots.so
+
+          - name: "Checkout json-c"
+            git:
+                    repo: https://github.com/json-c/json-c.git
+                    dest: /tmp/build/json-c
+
+          - name: "Run autogen for json-c"
+            shell: ./autogen.sh
+            args:
+                    chdir: /tmp/build/json-c
+
+          - name: "Run configure for json-c"
+            shell: ./configure
+            args:
+                    chdir: /tmp/build/json-c
+
+          - name: "Run make for json-c"
+            shell: make -j4
+            args:
+                    chdir: /tmp/build/json-c
+
+          - name: "Run make install for json-c"
+            shell: make install
+            args:
+                    chdir: /tmp/build/json-c
+
+
+          - name: "Checkout sway"
+            git:
+                    repo: https://github.com/swaywm/sway.git
+                    dest: /tmp/build/sway
+
+          - name: "Run meson for Sway"
+            shell: meson build  2>&1 | tee /tmp/build/sway-meson.txt
+            args:
+                    chdir: /tmp/build/sway
+                    creates: /tmp/build/sway/build
+
+          - name: "Compile Sway"
+            shell: ninja -C build  2>&1 | tee /tmp/build/sway-build.txt
+            args:
+                    chdir: /tmp/build/sway
+
+          - name: "Install Sway"
+            shell: ninja -C build install 2>&1 | tee /tmp/build/sway-build.txt
+            args:
+                    chdir: /tmp/build/sway
+
+
