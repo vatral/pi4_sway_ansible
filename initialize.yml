@@ -66,6 +66,12 @@
           - name: Update apt-file
             shell: apt-file update
 
+          - name: Disable console blanking
+            replace:
+                    name=/boot/cmdline.txt
+                    regexp="^((?!.*consoleblank=)+)$"
+                    replace="\1 consoleblank=0"
+
           - import_role:
                     name: willshersystems.sshd
             vars:
